@@ -80,12 +80,11 @@ func main() {
 	targetPort := flag.Int("target_service_port", 3000, "转发目标端口")
 	targetHost := flag.String("target_service_host", "127.0.0.1", "转发目标HOST")
 	listenPort := flag.Int("listen_port", 1616, "本机监听端口")
-	maxRequestsPerCon = *flag.Int("requests_per_conn", 1000, "每个conn最大http请求数")
+	requestsPerCon := flag.Int("requests_per_conn", 1000, "每个conn最大http请求数")
 
 	flag.Parse()
-	
+	maxRequestsPerCon=*requestsPerCon
 	targetReverseHost := fmt.Sprintf("%s:%d",*targetHost,*targetPort)
-	// fmt.Printf("%s",targetReverseHost)
 	proxy:=ReverseProxy([]*url.URL{
 		{
 			Scheme:"http",
