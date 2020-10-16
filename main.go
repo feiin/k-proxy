@@ -18,6 +18,7 @@ type counterListener struct {
 //重写net.Listener.Accept(),对接收到的连接注入请求计数器
 func (c *counterListener) Accept() (net.Conn, error) {
 	conn, err := c.Listener.Accept()
+	fmt.Printf("new connection %+v", conn)
 	if err != nil {
 		return nil, err
 	}
@@ -29,6 +30,10 @@ type counter int
 
 func (c *counter) Increment() int {
 	*c++
+	return int(*c)
+}
+
+func (c *counter) GetRequestsCounter() int {
 	return int(*c)
 }
 
@@ -59,18 +64,37 @@ func ReverseProxy(targets []*url.URL) *httputil.ReverseProxy{
 		// fmt.Printf("req
 		localAddr := req.Context().Value(http.LocalAddrContextKey)
 		if ct, ok := localAddr.(interface{ Increment() int }); ok {
-			if ct.Increment() >= maxRequestsPerCon {
+			currRequests := ct.Increment()
+
+			// fmt.Printf("current number %d requests  %d,\r\n",currRequests,maxRequestsPerCon)
+			if currRequests >= maxRequestsPerCon {
 				// req.Header("Connection", "close")
-				// fmt.Printf("arrive at %d requests \n",maxRequestsPerCon)
-				req.Header["Connection"] = []string{"close"}
+				// fmt.Printf("arrive at %d requests  %d,\r\n",maxRequestsPerCon,currRequests)
+
+				req.Header.Set("Connection", "close")
+				// req.Header["Connection"] = []string{"close"}
 
 			}
 		}
 		
 		
 	}
+
+	modifyResponse := func(r *http.Response)  error{
+		localAddr := r.Request.Context().Value(http.LocalAddrContextKey)
+		if ct, ok := localAddr.(interface{ GetRequestsCounter() int }); ok {
+			currRequests := ct.GetRequestsCounter()
+			// fmt.Printf("response current number %d requests  %d,\r\n",currRequests,maxRequestsPerCon)
+			if currRequests >= maxRequestsPerCon {
+
+				r.Header.Set("Connection", "close")
+			}
+		}
+		return nil
+	}
  	return &httputil.ReverseProxy{
- 		Director:director,
+		 Director:director,
+		 ModifyResponse:modifyResponse,
 	}
 }
 
