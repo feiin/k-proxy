@@ -61,7 +61,7 @@ func ReverseProxy(targets []*url.URL) *httputil.ReverseProxy{
 		if ct, ok := localAddr.(interface{ Increment() int }); ok {
 			if ct.Increment() >= maxRequestsPerCon {
 				// req.Header("Connection", "close")
-				fmt.Printf("arrive at %d requests",maxRequestsPerCon)
+				// fmt.Printf("arrive at %d requests \n",maxRequestsPerCon)
 				req.Header["Connection"] = []string{"close"}
 
 			}
