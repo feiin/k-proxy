@@ -18,7 +18,7 @@ type counterListener struct {
 //重写net.Listener.Accept(),对接收到的连接注入请求计数器
 func (c *counterListener) Accept() (net.Conn, error) {
 	conn, err := c.Listener.Accept()
-	fmt.Printf("new connection %+v", conn)
+	// fmt.Printf("new connection %+v", conn)
 	if err != nil {
 		return nil, err
 	}
@@ -69,8 +69,7 @@ func ReverseProxy(targets []*url.URL) *httputil.ReverseProxy{
 			// fmt.Printf("current number %d requests  %d,\r\n",currRequests,maxRequestsPerCon)
 			if currRequests >= maxRequestsPerCon {
 				// req.Header("Connection", "close")
-				// fmt.Printf("arrive at %d requests  %d,\r\n",maxRequestsPerCon,currRequests)
-
+				// fmt.Printf("arrive at %d  requests %d,\r\n",maxRequestsPerCon,currRequests)
 				req.Header.Set("Connection", "close")
 				// req.Header["Connection"] = []string{"close"}
 
@@ -107,6 +106,9 @@ func main() {
 	requestsPerCon := flag.Int("requests_per_conn", 1000, "每个conn最大http请求数")
 
 	flag.Parse()
+
+	
+
 	maxRequestsPerCon=*requestsPerCon
 	targetReverseHost := fmt.Sprintf("%s:%d",*targetHost,*targetPort)
 	proxy:=ReverseProxy([]*url.URL{
