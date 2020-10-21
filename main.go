@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"fmt"
 	"flag"
-
+	"time"
 	"net"
 )
 
@@ -77,14 +77,28 @@ func ReverseProxy(targets []*url.URL) *httputil.ReverseProxy{
 			currRequests := ct.GetRequestsCounter()
 			// fmt.Printf("response current number %d requests  %d,\r\n",currRequests,maxRequestsPerCon)
 			if currRequests >= maxRequestsPerCon {
-
 				r.Header.Set("Connection", "close")
 			}
 		}
 		return nil
 	}
+
+	roundTripper := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		MaxIdleConnsPerHost:   200,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
  	return &httputil.ReverseProxy{
 		 Director:director,
+		 Transport:roundTripper,
 		 ModifyResponse:modifyResponse,
 	}
 }
