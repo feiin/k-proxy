@@ -33,9 +33,9 @@ func (c *counter) Increment() int {
 	return int(*c)
 }
 
-func (c *counter) GetRequestsCounter() int {
-	return int(*c)
-}
+// func (c *counter) GetRequestsCounter() int {
+// 	return int(*c)
+// }
 
 //重新定义net.Conn,注入计数器ct
 type counterConn struct {
@@ -62,19 +62,19 @@ func ReverseProxy(targets []*url.URL) *httputil.ReverseProxy{
  		req.URL.Host = target.Host
 
 		// fmt.Printf("req
-		localAddr := req.Context().Value(http.LocalAddrContextKey)
-		if ct, ok := localAddr.(interface{ Increment() int }); ok {
-			ct.Increment()
-			//just incr
-		}
+		// localAddr := req.Context().Value(http.LocalAddrContextKey)
+		// if ct, ok := localAddr.(interface{ Increment() int }); ok {
+		// 	ct.Increment()
+		// 	//just incr
+		// }
 		
 		
 	}
 
 	modifyResponse := func(r *http.Response)  error{
 		localAddr := r.Request.Context().Value(http.LocalAddrContextKey)
-		if ct, ok := localAddr.(interface{ GetRequestsCounter() int }); ok {
-			currRequests := ct.GetRequestsCounter()
+		if ct, ok := localAddr.(interface{ Increment() int }); ok {
+			currRequests := ct.Increment()
 			// fmt.Printf("response current number %d requests  %d,\r\n",currRequests,maxRequestsPerCon)
 			if currRequests >= maxRequestsPerCon {
 				r.Header.Set("Connection", "close")
